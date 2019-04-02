@@ -98,8 +98,6 @@ def lambda_handler(event, context):
 
     for r in regions_list:
         t = Thread(target=aws.get_ec2_instances, args=(r, q), daemon=True)
-        turn_on_list = []
-        turn_off_list = []
         t.start()
         threads.append(t)
 
@@ -114,6 +112,8 @@ def lambda_handler(event, context):
             results = {**results, **q_item}
 
     for aws_region, data in results.items():
+        turn_on_list = []
+        turn_off_list = []
         for item in data:
             if 'turn_on' in item and item['turn_on'] == current_time:
                 turn_on_list.append(item['id'])

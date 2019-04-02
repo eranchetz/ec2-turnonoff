@@ -30,43 +30,53 @@ resource "aws_iam_role_policy" "lambda_ec2_turnonoff_policy" {
     role = "${aws_iam_role.lambda_ec2_turnonoff.id}"
 
     policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeRegions",
-        "ec2:DescribeInstances"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:StartInstances",
-        "ec2:StopInstances"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "ForAnyValue:StringEquals": {
-          "aws:TagKeys": [
-            "TurnOn",
-            "TurnOff"
-          ]
-        }
+{  
+   "Version":"2012-10-17",
+   "Statement":[  
+      {  
+         "Effect":"Allow",
+         "Action":[  
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+         ],
+         "Resource":"arn:aws:logs:*:*:*"
+      },
+      {  
+         "Effect":"Allow",
+         "Action":[  
+            "ec2:DescribeRegions",
+            "ec2:DescribeInstances"
+         ],
+         "Resource":"*"
+      },
+      {  
+         "Sid":"VisualEditor0",
+         "Effect":"Allow",
+         "Action":[  
+            "ec2:StartInstances"
+         ],
+         "Resource":"*",
+         "Condition":{  
+            "StringLike":{  
+               "ec2:ResourceTag/TurnOn":"*"
+            }
+         }
+      },
+      {  
+         "Sid":"VisualEditor1",
+         "Effect":"Allow",
+         "Action":[  
+            "ec2:StopInstances"
+         ],
+         "Resource":"*",
+         "Condition":{  
+            "StringLike":{  
+               "ec2:ResourceTag/TurnOff":"*"
+            }
+         }
       }
-    }
-  ]
+   ]
 }
 EOF
 }
