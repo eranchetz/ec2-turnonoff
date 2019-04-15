@@ -82,7 +82,8 @@ EOF
 }
 
 variable "workweek" {
-  default = "Monday"
+  type        = "string"
+  description = "Work week start day (Example: Sunday or Monday)."
 }
 
 

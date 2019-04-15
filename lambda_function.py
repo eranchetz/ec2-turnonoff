@@ -5,24 +5,20 @@ from queue import Queue
 from threading import Thread
 from datetime import datetime
 
-version = '1.0'
-
-
-# Todo: performance tests, and check that pagination actually works
 
 ###
 # Logic:
 # 1. Turn On instances with "TurnOn" tag.
-# 2. Do not turn on instances in weekend if environment variable 'workweek_tag' is exist.
-# 3. If environment tag 'workweek_tag' equal Sunday, instances will not turned on on Friday and Saturday.
+# 2. Don't turn on instances on weekends if environment variable 'workweek_tag' is exist.
+# 3. If environment tag 'workweek_tag' equal Sunday, instances will not turned on Friday and Saturday.
 #   --- If tag equal Monday, instances will not turned on on Saturday and Sunday. 
 # 4. Turn Off instances with "TurnOff" tag.
-# 5. Supports pagination and multithreading.
+# 5. Supports pagination and Multithreading.
 ###
 
 
 class Aws:
-    def __init__(self, region='us-east-1'):
+    def __init__(self, region: str):
         self.region = region
         self.session = boto3.Session()
 
@@ -30,7 +26,7 @@ class Aws:
         return [region['RegionName'] for region in
                 self.session.client('ec2').describe_regions()['Regions']]
 
-    def get_ec2_instances(self, region, queue):
+    def get_ec2_instances(self, region: str, queue):
         instances = {}
 
         response = self.session.client('ec2', region_name=region).describe_instances()
@@ -65,13 +61,11 @@ class Aws:
         return instances
 
     def ec2_turn_off(self, aws_region_turnon: str, instances_list: list):
-        response = self.session.client('ec2', region_name=aws_region_turnon).stop_instances(InstanceIds=instances_list)
-        return response
+        return self.session.client('ec2', region_name=aws_region_turnon).stop_instances(InstanceIds=instances_list)
 
     def ec2_turn_on(self, aws_region_turnoff: str, instances_list: list):
-        response = self.session.client('ec2', region_name=aws_region_turnoff).start_instances(
+        return self.session.client('ec2', region_name=aws_region_turnoff).start_instances(
             InstanceIds=instances_list)
-        return response
 
 
 def workweek_start_tag():
@@ -126,14 +120,14 @@ def lambda_handler(event, context):
             elif workweek_start == "Monday" and (today == "Saturday" or today == "Sunday"):
                 continue
             else:
-                logger.info(f'in region {aws_region}, going to turn on {turn_on_list}')
+                logger.info(f'[TurnOn] region: {aws_region}, going to turn on {turn_on_list}')
                 try:
                     aws.ec2_turn_on(aws_region, turn_on_list)
                 except Exception as e:
-                    logger.error(str(e))
+                    logger.exception(str(e))
 
         if turn_off_list:
-            logger.info(f'in region {aws_region}, going to turn off {turn_off_list}')
+            logger.info(f'[TurnOff] region: {aws_region}, going to turn off {turn_off_list}')
             try:
                 aws.ec2_turn_off(aws_region, turn_off_list)
             except Exception as e:
